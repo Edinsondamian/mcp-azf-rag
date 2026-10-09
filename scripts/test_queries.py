@@ -17,7 +17,7 @@ from src.application.queries import ValidateFichaRucQuery, GetFichaRucByDniQuery
 
 def run_tests() -> None:
     print("==================================================")
-    print(" PRUEBAS DE VALIDACIÓN CQRS (AZURE AI SEARCH) ")
+    print(" PRUEBAS DE VALIDACION CQRS (AZURE AI SEARCH) ")
     print("==================================================\n")
 
     # Caso 1: APROBADO
