@@ -3,6 +3,7 @@ from typing import Optional, List
 from azure.storage.blob import BlobServiceClient, ContainerClient, ContentSettings
 
 from ..config import settings
+from ..crosscutting.constants import CONTENT_TYPE_PDF
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class AzureBlobService:
         self,
         blob_name: str,
         data: bytes,
-        content_type: str = "application/pdf",
+        content_type: str = CONTENT_TYPE_PDF,
         overwrite: bool = True
     ) -> str:
         """

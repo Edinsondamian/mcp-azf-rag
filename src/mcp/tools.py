@@ -14,6 +14,14 @@ except (ImportError, ModuleNotFoundError):
 from ..application.bus import mediator
 from ..application.queries import ValidateFichaRucQuery, GetFichaRucByDniQuery
 from ..application.commands import IndexFichaRucCommand, UploadBlobCommand
+from ..crosscutting.constants import (
+    MCP_SERVER_NAME,
+    RESULTADO_NO_ENCONTRADO,
+    MSG_NO_ENCONTRADO,
+    KEY_RESULTADO,
+    KEY_COMENTARIO,
+    CONTENT_TYPE_PDF,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +31,7 @@ def create_mcp_server() -> Any:
     if MCPServer is None:
         raise RuntimeError("La librería mcp no está instalada o no es compatible.")
 
-    server = MCPServer("mcp-azf-rag-tools")
+    server = MCPServer(MCP_SERVER_NAME)
 
     @server.tool()
     def validar_documento_por_dni(
@@ -59,8 +67,8 @@ def create_mcp_server() -> Any:
         doc = mediator.query(query)
         if not doc:
             return json.dumps({
-                "RESULTADO": "NO_ENCONTRADO",
-                "COMENTARIO": "El valor recibido no fue encontrado en la base de conocimientos"
+                KEY_RESULTADO: RESULTADO_NO_ENCONTRADO,
+                KEY_COMENTARIO: MSG_NO_ENCONTRADO
             }, ensure_ascii=False, indent=2)
 
         return json.dumps(doc.model_dump(by_alias=True), ensure_ascii=False, indent=2)
@@ -69,7 +77,7 @@ def create_mcp_server() -> Any:
     def subir_documento_sunat(
         nombre_archivo: str,
         contenido_base64: str,
-        content_type: str = "application/pdf"
+        content_type: str = CONTENT_TYPE_PDF
     ) -> str:
         """
         Sube un documento SUNAT (ej. Ficha RUC en PDF) al contenedor de Azure Blob Storage.

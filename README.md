@@ -59,6 +59,12 @@ El sistema separa estrictamente las operaciones de lectura de las operaciones de
 ### 🚌 CQRS Mediator
 El bus `CQRSMediator` desacopla los controladores HTTP y las herramientas MCP de la lógica de dominio.
 
+### 🌐 Capa Cross-Cutting (`src/crosscutting/`)
+Centraliza todas las constantes transversales de la aplicación para evitar valores mágicos (*magic strings*):
+- **Constantes de Negocio y Validación**: Mensajes estándar (`MSG_APROBADO`, `MSG_NO_ENCONTRADO`), plantilla de observación (`PLANTILLA_OBSERVACION`), y claves de salida JSON (`KEY_RESULTADO`, `KEY_COMENTARIO`, `KEY_DATOS`).
+- **Constantes de Azure**: Nombres predeterminados de índices (`DEFAULT_INDEX_NAME`), contenedores (`DEFAULT_CONTAINER_NAME`), nombres de campos (`FIELD_DNI`, `FIELD_RUC`, etc.) y campos proyectados (`SEARCH_SELECTED_FIELDS`).
+- **Constantes de MCP y Azure Functions**: Nombres de herramientas expuestas (`TOOL_VALIDAR_DOCUMENTO`, `TOOL_CONSULTAR_FICHA`), cabecera HTTP (`HEADER_VALIDATION_RESULT`) y tipos de contenido (`CONTENT_TYPE_PDF`).
+
 ---
 
 ## 📄 Esquema del Índice en Azure AI Search

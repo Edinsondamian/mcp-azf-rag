@@ -13,6 +13,16 @@ from azure.search.documents.indexes.models import (
 
 from ..config import settings
 from ..domain.models import FichaRucDocument
+from ..crosscutting.constants import (
+    DEFAULT_INDEX_NAME,
+    FIELD_ID,
+    FIELD_DNI,
+    FIELD_RUC,
+    FIELD_NOMBRE_PERSONA,
+    FIELD_NOMBRE_COMERCIAL,
+    FIELD_ACTIVIDAD_ECONOMICA,
+    SEARCH_SELECTED_FIELDS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +68,12 @@ class AzureSearchService:
         except Exception:
             logger.info("Creando el índice '%s'...", self.index_name)
             fields = [
-                SimpleField(name="id", type=SearchFieldDataType.String, key=True),
-                SearchableField(name="dni", type=SearchFieldDataType.String, filterable=True),
-                SearchableField(name="ruc", type=SearchFieldDataType.String, filterable=True),
-                SearchableField(name="nombre_persona", type=SearchFieldDataType.String),
-                SearchableField(name="nombre_comercial", type=SearchFieldDataType.String),
-                SearchableField(name="actividad_economica", type=SearchFieldDataType.String),
+                SimpleField(name=FIELD_ID, type=SearchFieldDataType.String, key=True),
+                SearchableField(name=FIELD_DNI, type=SearchFieldDataType.String, filterable=True),
+                SearchableField(name=FIELD_RUC, type=SearchFieldDataType.String, filterable=True),
+                SearchableField(name=FIELD_NOMBRE_PERSONA, type=SearchFieldDataType.String),
+                SearchableField(name=FIELD_NOMBRE_COMERCIAL, type=SearchFieldDataType.String),
+                SearchableField(name=FIELD_ACTIVIDAD_ECONOMICA, type=SearchFieldDataType.String),
             ]
             index = SearchIndex(name=self.index_name, fields=fields)
             self.index_client.create_index(index)
@@ -72,11 +82,6 @@ class AzureSearchService:
     def search_by_dni(self, dni: str) -> Optional[FichaRucDocument]:
         """
         Busca un registro en Azure AI Search filtrando por el número de DNI.
-        Equivalente a:
-        results = search_client.search(
-            filter=f"dni eq '{dni}'",
-            select=["id", "dni", "ruc", "nombre_persona", "nombre_comercial", "actividad_economica"]
-        )
         """
         clean_dni = dni.strip()
         try:
@@ -84,8 +89,8 @@ class AzureSearchService:
             results = list(
                 self.search_client.search(
                     search_text="*",
-                    filter=f"dni eq '{clean_dni}'",
-                    select=["id", "dni", "ruc", "nombre_persona", "nombre_comercial", "actividad_economica"],
+                    filter=f"{FIELD_DNI} eq '{clean_dni}'",
+                    select=SEARCH_SELECTED_FIELDS,
                     top=1
                 )
             )
@@ -95,8 +100,8 @@ class AzureSearchService:
                 results = list(
                     self.search_client.search(
                         search_text=clean_dni,
-                        search_fields=["dni"],
-                        select=["id", "dni", "ruc", "nombre_persona", "nombre_comercial", "actividad_economica"],
+                        search_fields=[FIELD_DNI],
+                        select=SEARCH_SELECTED_FIELDS,
                         top=1
                     )
                 )
@@ -107,12 +112,12 @@ class AzureSearchService:
 
             item = results[0]
             return FichaRucDocument(
-                id=str(item.get("id", clean_dni)),
-                dni=str(item.get("dni", clean_dni)),
-                ruc=str(item.get("ruc", "")),
-                nombre_persona=str(item.get("nombre_persona", "")),
-                nombre_comercial=str(item.get("nombre_comercial", "")),
-                actividad_economica=str(item.get("actividad_economica", "")),
+                id=str(item.get(FIELD_ID, clean_dni)),
+                dni=str(item.get(FIELD_DNI, clean_dni)),
+                ruc=str(item.get(FIELD_RUC, "")),
+                nombre_persona=str(item.get(FIELD_NOMBRE_PERSONA, "")),
+                nombre_comercial=str(item.get(FIELD_NOMBRE_COMERCIAL, "")),
+                actividad_economica=str(item.get(FIELD_ACTIVIDAD_ECONOMICA, "")),
                 search_score=item.get("@search.score", 1.0)
             )
         except Exception as e:
@@ -123,12 +128,12 @@ class AzureSearchService:
         """Indexa o actualiza un documento en fichas-ruc-index."""
         try:
             payload: Dict[str, Any] = {
-                "id": doc.id,
-                "dni": doc.dni,
-                "ruc": doc.ruc,
-                "nombre_persona": doc.nombre_persona,
-                "nombre_comercial": doc.nombre_comercial,
-                "actividad_economica": doc.actividad_economica
+                FIELD_ID: doc.id,
+                FIELD_DNI: doc.dni,
+                FIELD_RUC: doc.ruc,
+                FIELD_NOMBRE_PERSONA: doc.nombre_persona,
+                FIELD_NOMBRE_COMERCIAL: doc.nombre_comercial,
+                FIELD_ACTIVIDAD_ECONOMICA: doc.actividad_economica
             }
             result = self.search_client.upload_documents(documents=[payload])
             return bool(result and result[0].succeeded)
@@ -141,18 +146,18 @@ class AzureSearchService:
         try:
             results = self.search_client.search(
                 search_text="*",
-                select=["id", "dni", "ruc", "nombre_persona", "nombre_comercial", "actividad_economica"],
+                select=SEARCH_SELECTED_FIELDS,
                 top=top
             )
             docs = []
             for item in results:
                 docs.append(FichaRucDocument(
-                    id=str(item.get("id", "")),
-                    dni=str(item.get("dni", "")),
-                    ruc=str(item.get("ruc", "")),
-                    nombre_persona=str(item.get("nombre_persona", "")),
-                    nombre_comercial=str(item.get("nombre_comercial", "")),
-                    actividad_economica=str(item.get("actividad_economica", "")),
+                    id=str(item.get(FIELD_ID, "")),
+                    dni=str(item.get(FIELD_DNI, "")),
+                    ruc=str(item.get(FIELD_RUC, "")),
+                    nombre_persona=str(item.get(FIELD_NOMBRE_PERSONA, "")),
+                    nombre_comercial=str(item.get(FIELD_NOMBRE_COMERCIAL, "")),
+                    actividad_economica=str(item.get(FIELD_ACTIVIDAD_ECONOMICA, "")),
                     search_score=item.get("@search.score", 1.0)
                 ))
             return docs

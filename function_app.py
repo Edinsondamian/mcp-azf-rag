@@ -18,6 +18,16 @@ from src.application.commands import (
     IndexFichaRucCommand,
     UploadBlobCommand
 )
+from src.crosscutting.constants import (
+    RESULTADO_NO_ENCONTRADO,
+    MSG_NO_ENCONTRADO,
+    KEY_RESULTADO,
+    KEY_COMENTARIO,
+    HEADER_VALIDATION_RESULT,
+    CONTENT_TYPE_PDF,
+    TOOL_VALIDAR_DOCUMENTO,
+    TOOL_CONSULTAR_FICHA,
+)
 from src.infrastructure.azure_search_service import AzureSearchService
 from src.infrastructure.azure_blob_service import AzureBlobService
 
@@ -116,14 +126,14 @@ def validate_document(req: func.HttpRequest) -> func.HttpResponse:
             body=json.dumps(output, ensure_ascii=False, indent=2),
             mimetype="application/json",
             status_code=200,  # Retornamos 200 con el cuerpo JSON exacto para el cliente
-            headers={"X-Validation-Result": "NO_ENCONTRADO"}
+            headers={HEADER_VALIDATION_RESULT: RESULTADO_NO_ENCONTRADO}
         )
 
     return func.HttpResponse(
         body=json.dumps(output, ensure_ascii=False, indent=2),
         mimetype="application/json",
         status_code=200,
-        headers={"X-Validation-Result": result.RESULTADO.value}
+        headers={HEADER_VALIDATION_RESULT: result.RESULTADO.value}
     )
 
 
@@ -144,8 +154,8 @@ def get_document(req: func.HttpRequest) -> func.HttpResponse:
     if not doc:
         return func.HttpResponse(
             body=json.dumps({
-                "RESULTADO": "NO_ENCONTRADO",
-                "COMENTARIO": "El valor recibido no fue encontrado en la base de conocimientos"
+                KEY_RESULTADO: RESULTADO_NO_ENCONTRADO,
+                KEY_COMENTARIO: MSG_NO_ENCONTRADO
             }, ensure_ascii=False, indent=2),
             mimetype="application/json",
             status_code=200
@@ -203,7 +213,7 @@ def upload_file(req: func.HttpRequest) -> func.HttpResponse:
         body = req.get_json()
         file_name = body["filename"]
         content_b64 = body["content"]
-        content_type = body.get("content_type", "application/pdf")
+        content_type = body.get("content_type", CONTENT_TYPE_PDF)
         data = base64.b64decode(content_b64)
 
         cmd = UploadBlobCommand(
@@ -240,7 +250,7 @@ def mcp_tool_call(req: func.HttpRequest) -> func.HttpResponse:
         tool_name = payload.get("name")
         args = payload.get("arguments", {})
 
-        if tool_name == "validar_documento_por_dni":
+        if tool_name == TOOL_VALIDAR_DOCUMENTO:
             query = ValidateFichaRucQuery(
                 dni=args.get("dni", ""),
                 nombre_persona=args.get("nombre_persona"),
@@ -253,14 +263,14 @@ def mcp_tool_call(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
 
-        elif tool_name == "consultar_ficha_ruc":
+        elif tool_name == TOOL_CONSULTAR_FICHA:
             query = GetFichaRucByDniQuery(dni=args.get("dni", ""))
             doc = mediator.query(query)
             if not doc:
                 return func.HttpResponse(
                     body=json.dumps({
-                        "RESULTADO": "NO_ENCONTRADO",
-                        "COMENTARIO": "El valor recibido no fue encontrado en la base de conocimientos"
+                        KEY_RESULTADO: RESULTADO_NO_ENCONTRADO,
+                        KEY_COMENTARIO: MSG_NO_ENCONTRADO
                     }, ensure_ascii=False, indent=2),
                     mimetype="application/json"
                 )

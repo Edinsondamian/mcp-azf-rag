@@ -7,6 +7,14 @@ from ...domain.models import (
     ValidationResponse,
     FichaRucDocument
 )
+from ...crosscutting.constants import (
+    MSG_APROBADO,
+    MSG_NO_ENCONTRADO,
+    PLANTILLA_OBSERVACION,
+    CAMPO_NOMBRE_PERSONA,
+    CAMPO_NOMBRE_COMERCIAL,
+    CAMPO_ACTIVIDAD_ECONOMICA,
+)
 from ...infrastructure.azure_search_service import AzureSearchService
 
 
@@ -41,7 +49,7 @@ class ValidateFichaRucQueryHandler(QueryHandler[ValidateFichaRucQuery, Validatio
         if not doc:
             return ValidationResponse(
                 RESULTADO=ResultadoValidacion.NO_ENCONTRADO,
-                COMENTARIO="El valor recibido no fue encontrado en la base de conocimientos",
+                COMENTARIO=MSG_NO_ENCONTRADO,
                 DATOS=None
             )
 
@@ -50,15 +58,15 @@ class ValidateFichaRucQueryHandler(QueryHandler[ValidateFichaRucQuery, Validatio
 
         if query.nombre_persona is not None:
             if _normalize(query.nombre_persona) != _normalize(doc.nombre_persona):
-                observaciones.append("- Campo NOMBRE PERSONA no coincide con el valor")
+                observaciones.append(PLANTILLA_OBSERVACION.format(campo=CAMPO_NOMBRE_PERSONA))
 
         if query.nombre_comercial is not None:
             if _normalize(query.nombre_comercial) != _normalize(doc.nombre_comercial):
-                observaciones.append("- Campo NOMBRE COMERCIAL no coincide con el valor")
+                observaciones.append(PLANTILLA_OBSERVACION.format(campo=CAMPO_NOMBRE_COMERCIAL))
 
         if query.actividad_economica is not None:
             if _normalize(query.actividad_economica) != _normalize(doc.actividad_economica):
-                observaciones.append("- Campo ACTIVIDAD ECONOMICA no coincide con el valor")
+                observaciones.append(PLANTILLA_OBSERVACION.format(campo=CAMPO_ACTIVIDAD_ECONOMICA))
 
         # 4. Evaluación de observaciones
         if observaciones:
@@ -71,6 +79,6 @@ class ValidateFichaRucQueryHandler(QueryHandler[ValidateFichaRucQuery, Validatio
         # 5. Todo coincide correctamente
         return ValidationResponse(
             RESULTADO=ResultadoValidacion.APROBADO,
-            COMENTARIO="Se valida correctamente el contenido",
+            COMENTARIO=MSG_APROBADO,
             DATOS=doc.model_dump(by_alias=True)
         )

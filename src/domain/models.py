@@ -2,11 +2,20 @@ from enum import Enum
 from typing import Optional, Any
 from pydantic import BaseModel, Field, ConfigDict
 
+from ..crosscutting.constants import (
+    RESULTADO_APROBADO,
+    RESULTADO_OBSERVADO,
+    RESULTADO_NO_ENCONTRADO,
+    KEY_RESULTADO,
+    KEY_COMENTARIO,
+    KEY_DATOS,
+)
+
 
 class ResultadoValidacion(str, Enum):
-    APROBADO = "APROBADO"
-    OBSERVADO = "OBSERVADO"
-    NO_ENCONTRADO = "NO_ENCONTRADO"
+    APROBADO = RESULTADO_APROBADO
+    OBSERVADO = RESULTADO_OBSERVADO
+    NO_ENCONTRADO = RESULTADO_NO_ENCONTRADO
 
 
 class FichaRucDocument(BaseModel):
@@ -36,9 +45,9 @@ class ValidationResponse(BaseModel):
     def to_output_dict(self, include_datos: bool = False) -> dict[str, Any]:
         """Devuelve el formato limpio requerido."""
         result: dict[str, Any] = {
-            "RESULTADO": self.RESULTADO.value,
-            "COMENTARIO": self.COMENTARIO
+            KEY_RESULTADO: self.RESULTADO.value,
+            KEY_COMENTARIO: self.COMENTARIO
         }
         if include_datos and self.DATOS:
-            result["DATOS"] = self.DATOS
+            result[KEY_DATOS] = self.DATOS
         return result
