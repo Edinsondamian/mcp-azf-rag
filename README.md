@@ -152,22 +152,101 @@ PYTHON_VERSION=3.14
 
 ---
 
+---
+
 ## 🧪 Pruebas y Verificación
 
-### Ejecutar Suite de Tests Unitarios (Pytest)
+El sistema cuenta con una batería integral de pruebas que cubren pruebas unitarias automatizadas y pruebas de integración en vivo contra los servicios de Azure AI Search y Blob Storage.
+
+### 📊 Matriz de Casos de Uso Probados
+
+| ID | Caso de Uso | DNI | Entrada Evaluada | Resultado | Estado |
+| :---: | :--- | :---: | :--- | :---: | :---: |
+| **CU-01** | Coincidencia Exacta | `12345678` | DNI, Nombre, Comercial y Actividad idénticos | `APROBADO` | ✅ PASS |
+| **CU-02** | Resiliencia de Formato | `70123456` | Minúsculas, tildes y espacios redundantes | `APROBADO` | ✅ PASS |
+| **CU-03** | Nombre Comercial Discrepante | `45678901` | Nombre comercial erróneo | `OBSERVADO` | ✅ PASS |
+| **CU-04** | Múltiples Discrepancias | `09876543` | Nombre de persona y actividad económica erróneos | `OBSERVADO` | ✅ PASS |
+| **CU-05** | DNI No Registrado | `99999999` | DNI inexistente en la base de conocimientos | `NO_ENCONTRADO` | ✅ PASS |
+| **CU-06** | Solo DNI | `41239876` | Únicamente número de DNI existente | `APROBADO` | ✅ PASS |
+| **CU-07** | Consulta Directa Ficha RUC | `72345678` | Consulta por DNI para recuperar datos completos | `DOC RECUPERADO` | ✅ PASS |
+| **CU-08** | Orquestación Agente | `48765432` | Invocación mediante `DocumentAgent.procesar_solicitud` | `APROBADO` | ✅ PASS |
+| **CU-09** | Herramienta MCP | `87654321` | Tool Call MCP `validar_documento_por_dni` | `APROBADO` | ✅ PASS |
+
+---
+
+### 📝 Detalle de Ejemplos y Respuestas
+
+#### Caso 1: Aprobado por Coincidencia Exacta (CU-01)
+- **Input:**
+  ```json
+  {
+    "dni": "12345678",
+    "nombre_persona": "PEREZ GARCIA JUAN",
+    "nombre_comercial": "JPG IMPORT & EXPORT",
+    "actividad_economica": "4690 - VENTA AL POR MAYOR NO ESPECIALIZADA"
+  }
+  ```
+- **Output:**
+  ```json
+  {
+    "RESULTADO": "APROBADO",
+    "COMENTARIO": "Se valida correctamente el contenido"
+  }
+  ```
+
+#### Caso 2: Observado por Múltiples Discrepancias (CU-04)
+- **Input:**
+  ```json
+  {
+    "dni": "09876543",
+    "nombre_persona": "HUAMAN ROJAS CARLOS ENRIQUE",
+    "nombre_comercial": "TRANSPORTE & LOGISTICA RAPIDO",
+    "actividad_economica": "8610 - ACTIVIDADES DE HOSPITALES"
+  }
+  ```
+- **Output:**
+  ```json
+  {
+    "RESULTADO": "OBSERVADO",
+    "COMENTARIO": "- Campo NOMBRE PERSONA no coincide con el valor\n- Campo ACTIVIDAD ECONOMICA no coincide con el valor"
+  }
+  ```
+
+#### Caso 3: No Encontrado (CU-05)
+- **Input:**
+  ```json
+  {
+    "dni": "99999999"
+  }
+  ```
+- **Output:**
+  ```json
+  {
+    "RESULTADO": "NO_ENCONTRADO",
+    "COMENTARIO": "El valor recibido no fue encontrado en la base de conocimientos"
+  }
+  ```
+
+---
+
+### 💻 Comandos de Ejecución de Pruebas
+
+#### 1. Ejecutar la Batería Completa de Casos de Uso
+Ejecuta los 9 casos de uso documentados arriba en vivo contra Azure:
+```bash
+python scripts/run_all_use_cases.py
+```
+
+#### 2. Ejecutar Tests Unitarios (Pytest)
+Ejecuta las pruebas unitarias aisladas de la lógica CQRS, mediador y normalización:
 ```bash
 pytest -v
 ```
 
-### Sembrar datos de prueba en Azure AI Search
-Carga contribuyentes de prueba (incluyendo DNI `12345678`) y un PDF de prueba a Blob Storage:
+#### 3. Sembrar o Actualizar Datos de Prueba en Azure
+Indexa los 8 contribuyentes de prueba en `fichas-ruc-index` y sube los blobs a Azure:
 ```bash
 python scripts/seed_sample_data.py
-```
-
-### Probar consultas y validaciones en vivo
-```bash
-python scripts/test_queries.py
 ```
 
 ---
