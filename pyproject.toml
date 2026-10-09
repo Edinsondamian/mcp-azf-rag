@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-azf-rag"
+version = "1.0.0"
+description = "Servidor MCP y Azure Function con arquitectura CQRS para RAG documental SUNAT (Azure AI Search y Blob Storage)"
+readme = "README.md"
+requires-python = ">=3.12, <=3.14"
+dependencies = [
+    "azure-functions>=1.18.0",
+    "azure-search-documents>=11.4.0",
+    "azure-storage-blob>=12.19.0",
+    "azure-identity>=1.15.0",
+    "mcp>=1.0.0",
+    "pydantic>=2.7.0",
+    "python-dotenv>=1.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]
