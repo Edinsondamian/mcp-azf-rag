@@ -116,7 +116,7 @@ def validate_document(req: func.HttpRequest) -> func.HttpResponse:
         actividad_economica=actividad_economica
     )
     result = mediator.query(query)
-    output = result.to_output_dict(include_datos=False)
+    output = result.to_output_dict(include_datos=True)
 
     # Mapeo de códigos de respuesta HTTP según especificación
     # 200: Aprobado / Observado
@@ -137,18 +137,16 @@ def validate_document(req: func.HttpRequest) -> func.HttpResponse:
     )
 
 
-@app.route(route="document/{dni}", methods=["GET"])
-def get_document(req: func.HttpRequest) -> func.HttpResponse:
-    """Consulta directa a Azure AI Search por DNI (Query CQRS)."""
-    dni = req.route_params.get("dni")
+def _handle_get_document(dni: str | None) -> func.HttpResponse:
+    """Función auxiliar para consultar un documento por DNI."""
     if not dni:
         return func.HttpResponse(
-            body=json.dumps({"error": "DNI requerido"}),
+            body=json.dumps({"error": "Parámetro 'dni' requerido."}),
             mimetype="application/json",
             status_code=400
         )
 
-    query = GetFichaRucByDniQuery(dni=dni)
+    query = GetFichaRucByDniQuery(dni=dni.strip())
     doc = mediator.query(query)
 
     if not doc:
@@ -166,6 +164,27 @@ def get_document(req: func.HttpRequest) -> func.HttpResponse:
         mimetype="application/json",
         status_code=200
     )
+
+
+@app.route(route="document/{dni}", methods=["GET"])
+def get_document_by_path(req: func.HttpRequest) -> func.HttpResponse:
+    """Consulta directa a Azure AI Search por DNI en ruta (GET /api/document/{dni})."""
+    dni = req.route_params.get("dni")
+    return _handle_get_document(dni)
+
+
+@app.route(route="document", methods=["GET"])
+def get_document_by_query(req: func.HttpRequest) -> func.HttpResponse:
+    """Consulta directa a Azure AI Search por DNI en parámetro (GET /api/document?dni=12345678)."""
+    dni = req.params.get("dni")
+    return _handle_get_document(dni)
+
+
+@app.route(route="v1/cliente", methods=["GET"])
+def get_cliente_alias(req: func.HttpRequest) -> func.HttpResponse:
+    """Alias para agentes externos (GET /api/v1/cliente?dni=12345678)."""
+    dni = req.params.get("dni")
+    return _handle_get_document(dni)
 
 
 @app.route(route="document", methods=["POST"])

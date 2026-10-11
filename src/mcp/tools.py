@@ -54,7 +54,7 @@ def create_mcp_server() -> Any:
             actividad_economica=actividad_economica
         )
         response = mediator.query(query)
-        output = response.to_output_dict(include_datos=False)
+        output = response.to_output_dict(include_datos=True)
         return json.dumps(output, ensure_ascii=False, indent=2)
 
     @server.tool()
