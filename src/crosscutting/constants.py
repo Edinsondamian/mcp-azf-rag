@@ -70,3 +70,13 @@ TOOL_INDEXAR_FICHA = "indexar_ficha_ruc"
 # CONSTANTES HTTP Y AZURE FUNCTIONS
 # =============================================================================
 HEADER_VALIDATION_RESULT = "X-Validation-Result"
+
+# =============================================================================
+# CONSTANTES DE AZURE OPENAI Y SKILLSET
+# =============================================================================
+DEFAULT_OPENAI_DEPLOYMENT = "gpt-5.6-luna"
+DEFAULT_OPENAI_API_VERSION = "2024-02-15-preview"
+DEFAULT_SKILLSET_NAME = "fichas-ruc-skillset"
+DEFAULT_DATASOURCE_NAME = "namerag-poc-datasource"
+DEFAULT_INDEXER_NAME = "fichas-ruc-indexer"
+SKILL_EXTRACT_FICHA_ROUTE = "skills/extract-ficha"

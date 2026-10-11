@@ -30,6 +30,7 @@ from src.crosscutting.constants import (
 )
 from src.infrastructure.azure_search_service import AzureSearchService
 from src.infrastructure.azure_blob_service import AzureBlobService
+from src.infrastructure.openai_extractor_service import OpenAIExtractorService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mcp-azf-rag")
@@ -304,6 +305,74 @@ def mcp_tool_call(req: func.HttpRequest) -> func.HttpResponse:
             status_code=404
         )
     except Exception as e:
+        return func.HttpResponse(
+            body=json.dumps({"error": str(e)}),
+            mimetype="application/json",
+            status_code=500
+        )
+
+
+@app.route(route="skills/extract-ficha", methods=["POST"])
+def extract_ficha_skill(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Custom Web API Skill para Azure AI Search Skillset (#Microsoft.Skills.Custom.WebApiSkill).
+    Recibe el texto extraído del documento (PDF de Ficha RUC en Blob Storage) y utiliza
+    Azure OpenAI (gpt-5.6-luna) para extraer los 5 campos estructurados requeridos:
+    - dni
+    - ruc
+    - nombre_persona
+    - nombre_comercial
+    - actividad_economica
+    """
+    try:
+        req_body = req.get_json()
+        values = req_body.get("values", [])
+        if not values:
+            return func.HttpResponse(
+                body=json.dumps({"values": []}),
+                mimetype="application/json",
+                status_code=200
+            )
+
+        extractor = OpenAIExtractorService()
+        response_values = []
+
+        for record in values:
+            record_id = record.get("recordId")
+            data = record.get("data", {})
+            text = data.get("text", "") or data.get("content", "")
+
+            try:
+                extracted = extractor.extract_fields(text)
+                response_values.append({
+                    "recordId": record_id,
+                    "data": extracted,
+                    "errors": [],
+                    "warnings": []
+                })
+            except Exception as item_err:
+                logger.error("Error al procesar recordId %s: %s", record_id, str(item_err))
+                response_values.append({
+                    "recordId": record_id,
+                    "data": {
+                        "dni": "",
+                        "ruc": "",
+                        "nombre_persona": "",
+                        "nombre_comercial": "-",
+                        "actividad_economica": "-"
+                    },
+                    "errors": [{"message": str(item_err)}],
+                    "warnings": []
+                })
+
+        return func.HttpResponse(
+            body=json.dumps({"values": response_values}, ensure_ascii=False, indent=2),
+            mimetype="application/json",
+            status_code=200
+        )
+
+    except Exception as e:
+        logger.error("Error global en Custom Web API Skill: %s", str(e))
         return func.HttpResponse(
             body=json.dumps({"error": str(e)}),
             mimetype="application/json",
