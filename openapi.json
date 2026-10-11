@@ -1,0 +1,90 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "API RAG y Validación Documental SUNAT",
+    "description": "Servicio de consulta y validación de clientes en Azure AI Search",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://azf-mcp-tools-poc-aeengrd7hmcuhrbf.brazilsouth-01.azurewebsites.net/api"
+    }
+  ],
+  "paths": {
+    "/v1/cliente": {
+      "get": {
+        "operationId": "consultarCliente",
+        "summary": "Consultar registro oficial del cliente por DNI",
+        "description": "Recupera los datos oficiales registrados en Azure AI Search (nombre, ruc, nombre comercial, actividad económica)",
+        "parameters": [
+          {
+            "name": "dni",
+            "in": "query",
+            "required": true,
+            "description": "Número de documento de identidad (DNI)",
+            "schema": {
+              "type": "string",
+              "example": "12345678"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registro encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "dni": { "type": "string" },
+                    "ruc": { "type": "string" },
+                    "nombre_persona": { "type": "string" },
+                    "nombre_comercial": { "type": "string" },
+                    "actividad_economica": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validate": {
+      "get": {
+        "operationId": "validarCliente",
+        "summary": "Validar cliente y obtener datos oficiales",
+        "description": "Valida y retorna el estado de coincidencia junto con los datos oficiales del contribuyente",
+        "parameters": [
+          {
+            "name": "dni",
+            "in": "query",
+            "required": true,
+            "description": "Número de DNI del cliente",
+            "schema": {
+              "type": "string",
+              "example": "12345678"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado de validación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "RESULTADO": { "type": "string" },
+                    "COMENTARIO": { "type": "string" },
+                    "DATOS": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
