@@ -164,10 +164,27 @@ PYTHON_VERSION=3.14
 
 El sistema cuenta con una batería integral de pruebas que cubren pruebas unitarias automatizadas y pruebas de integración en vivo contra los servicios de Azure AI Search y Blob Storage.
 
+### 📋 Contribuyentes y DNIs Registrados para Pruebas (`fichas-ruc-index`)
+
+Los siguientes 8 registros se encuentran sembrados en Azure AI Search para realizar pruebas funcionales y de auditoría:
+
+| DNI | RUC | Nombre y Apellidos / Razón Social | Nombre Comercial | Actividad Económica |
+| :---: | :---: | :--- | :--- | :--- |
+| **`12345678`** | `10123456781` | PEREZ GARCIA JUAN | JPG IMPORT & EXPORT | 4690 - VENTA AL POR MAYOR NO ESPECIALIZADA |
+| **`87654321`** | `10876543212` | QUISPE MAMANI MARIA | INVERSIONES ANDINAS | 4711 - VENTA AL POR MENOR EN COMERCIOS NO ESPECIALIZADOS |
+| **`45678901`** | `10456789013` | ROJAS MENDOZA CARLOS ALBERTO | SOLUCIONES DIGITALES DEL SUR | 6201 - ACTIVIDADES DE PROGRAMACION INFORMATICA |
+| **`70123456`** | `10701234564` | FLORES CASTILLO ANA LUCIA | BODEGA SAN ANTONIO | 4711 - VENTA AL POR MENOR EN COMERCIOS NO ESPECIALIZADOS |
+| **`09876543`** | `10098765435` | HUAMAN CONDORI CESAR AUGUSTO | TRANSPORTE & LOGISTICA RAPIDO | 4923 - TRANSPORTE DE CARGA POR CARRETERA |
+| **`41239876`** | `10412398766` | VEGA SANDOVAL ROSA ELVIRA | CONSULTORIA CONTABLE VEGA | 6920 - ACTIVIDADES DE CONTABILIDAD, TENEDURIA DE LIBROS Y AUDITORIA |
+| **`72345678`** | `10723456787` | GOMEZ VARGAS JORGE LUIS | RESTAURANTE SABORES PERUANOS | 5610 - ACTIVIDADES DE RESTAURANTES Y DE SERVICIO MOVIL DE COMIDAS |
+| **`48765432`** | `10487654328` | TORRES CHAVEZ PATRICIA ELENA | BOTICA LA SALUD | 4772 - VENTA AL POR MENOR DE PRODUCTOS FARMACEUTICOS Y MEDICINALES |
+
+---
+
 ### 📊 Matriz de Casos de Uso Probados
 
 | ID | Caso de Uso | DNI | Entrada Evaluada | Resultado | Estado |
-| :---: | :--- | :---: | :--- | :---: | :---: |
+| :---: | :--- | :---: | :--- | :--- | :---: |
 | **CU-01** | Coincidencia Exacta | `12345678` | DNI, Nombre, Comercial y Actividad idénticos | `APROBADO` | ✅ PASS |
 | **CU-02** | Resiliencia de Formato | `70123456` | Minúsculas, tildes y espacios redundantes | `APROBADO` | ✅ PASS |
 | **CU-03** | Nombre Comercial Discrepante | `45678901` | Nombre comercial erróneo | `OBSERVADO` | ✅ PASS |
@@ -180,7 +197,41 @@ El sistema cuenta con una batería integral de pruebas que cubren pruebas unitar
 
 ---
 
-### 📝 Detalle de Ejemplos y Respuestas
+### 💬 Prompts de Prueba para el Agente (Azure AI Foundry / Playground)
+
+Puedes copiar y pegar estos prompts directamente en la ventana de chat del agente en Azure AI Foundry para probar la integración con la herramienta `ClientesRag`:
+
+#### 🟢 Prueba 1: Resultado "Aprobado" (Coincidencia Total)
+```text
+Por favor valida al siguiente cliente:
+DNI: 12345678
+Nombre: PEREZ GARCIA JUAN
+Nombre comercial: JPG IMPORT & EXPORT
+Actividad económica: 4690 - VENTA AL POR MAYOR NO ESPECIALIZADA
+```
+* **Comportamiento esperado**: El agente consulta la herramienta con el DNI `12345678`, coteja los campos devueltos y reporta **Estado de Validación: Aprobado**.
+
+#### 🟡 Prueba 2: Resultado "Con Discrepancias" (Observado)
+```text
+Por favor audita estos datos del cliente:
+DNI: 87654321
+Nombre: QUISPE MAMANI MARIA
+Nombre comercial: TIENDA EL SOL DE LOS ANDES
+Actividad económica: 6201 - PROGRAMACION INFORMATICA
+```
+* **Comportamiento esperado**: El agente detecta que en la base oficial el comercio es `INVERSIONES ANDINAS` y la actividad es `4711 - VENTA AL POR MENOR...`, reportando **Estado de Validación: Con Discrepancias**.
+
+#### 🔴 Prueba 3: Resultado "No Encontrado" (DNI Inexistente)
+```text
+Valida el siguiente cliente:
+DNI: 99999999
+Nombre: LOPEZ ROBERTO
+```
+* **Comportamiento esperado**: La herramienta retorna `NO_ENCONTRADO` y el agente reporta **Estado de Validación: No Encontrado**.
+
+---
+
+### 📝 Detalle de Ejemplos y Respuestas JSON (API / MCP)
 
 #### Caso 1: Aprobado por Coincidencia Exacta (CU-01)
 - **Input:**
@@ -287,8 +338,10 @@ func start
 
 #### Endpoints expuestos:
 - `POST /api/validate` o `GET /api/validate?dni=12345678` -> Validación CQRS.
-- `GET /api/document/{dni}` -> Recuperación de ficha RUC.
-- `POST /api/document` -> Indexación de documento en Azure Search.
+- `GET /api/document/{dni}` o `GET /api/document?dni=12345678` -> Recuperación de ficha RUC.
+- `GET /api/v1/cliente?dni=12345678` -> Endpoint de consulta para herramientas de agentes en Azure AI Foundry.
+- `POST /api/skills/extract-ficha` -> Custom Web API Skill para Azure AI Search con extracción vía GPT-5.6-luna.
+- `POST /api/document` -> Indexación directa de documento en Azure Search.
 - `POST /api/upload` -> Carga de archivo a Azure Blob Storage.
 - `POST /api/mcp/tools/call` -> Invocación HTTP de herramientas MCP.
 - `GET /api/health` -> Chequeo de salud y conectividad con Azure.
